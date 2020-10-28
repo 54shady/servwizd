@@ -1,6 +1,6 @@
 #@cpu is ip address of server aa.bb.cc.dd
 # authorized root login
-cat ~/.ssh/id_rsa.pub | ssh root@cpu "cat > ~/.ssh/authorized_keys"
+cat ~/.ssh/id_rsa.pub | ssh root@cpu "cat >> ~/.ssh/authorized_keys"
 
 # add anonymous as root
 ssh root@cpu "useradd -m -u 0 -o -g root -G root anonymous"
