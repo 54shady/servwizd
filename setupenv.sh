@@ -1,21 +1,39 @@
-#@cpu is ip address of server aa.bb.cc.dd
-# authorized root login
-cat ~/.ssh/id_rsa.pub | ssh root@cpu "cat >> ~/.ssh/authorized_keys"
+#/bin/bash
 
-# add anonymous as root
-ssh root@cpu "useradd -m -u 0 -o -g root -G root anonymous"
-ssh root@cpu "echo 0 | passwd --stdin anonymous"
+function print_usage()
+{
+	echo "auto setup linux machine"
+	echo "setupenv.sh <user> <ip>"
+}
+
+[ $# -lt 2 ] && print_usage && exit
+
+user=$1
+ip=$2
+port=$3
+
+# default port 22
+if [ -z $port ]; then
+	port=22
+fi
+
+ssh -p $port $user@$ip "mkdir -p ~/.ssh"
+cat ~/.ssh/id_rsa.pub | ssh -p $port $user@$ip "cat >> ~/.ssh/authorized_keys"
+
+# add anonymous as $user
+ssh -p $port $user@$ip "useradd -m -u 0 -o -g root -G root anonymous"
+ssh -p $port $user@$ip "echo 0 | passwd --stdin anonymous"
 
 # config anonymous ssh login
-ssh root@cpu "sed -i s'/root/root anonymous/' /etc/ssh/sshd_config"
-ssh root@cpu "service sshd restart"
+ssh -p $port $user@$ip "sed -i s'/root/root anonymous/' /etc/ssh/sshd_config"
+ssh -p $port $user@$ip "service sshd restart"
 
-ssh anonymous@cpu "mkdir ~/.ssh"
-cat ~/.ssh/id_rsa.pub | ssh anonymous@cpu "cat > ~/.ssh/authorized_keys"
+ssh -p $port anonymous@$ip "mkdir ~/.ssh"
+cat ~/.ssh/id_rsa.pub | ssh -p $port anonymous@$ip "cat > ~/.ssh/authorized_keys"
 
 # config bash
-scp dot_bashrc_mini anonymous@cpu:~/.bashrc
+scp -P $port dot_bashrc_mini anonymous@$ip:~/.bashrc
 
 # config vim
-cat vim.tar | ssh anonymous@cpu "tar xvf -"
-ssh anonymous@cpu "ln -s ~/.vim/vimrc ~/.vimrc"
+cat vim.tar | ssh -p $port anonymous@$ip "tar xvf -"
+ssh -p $port anonymous@$ip "ln -s ~/.vim/vimrc ~/.vimrc"
